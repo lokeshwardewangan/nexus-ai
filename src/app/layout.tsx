@@ -10,8 +10,7 @@ const lexend = Lexend({
 
 export const metadata: Metadata = {
   title: "AI Chat — Powered by Vercel AI SDK",
-  description:
-    "A professional AI chatbot built with Next.js and the Vercel AI SDK",
+  description: "A professional AI chatbot built with Next.js and the Vercel AI SDK",
 };
 
 export default function RootLayout({
@@ -21,9 +20,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className={`${lexend.variable} font-sans antialiased`}>
-        {children}
-      </body>
+      <body className={`${lexend.variable} font-sans antialiased`}>{children}</body>
     </html>
   );
 }

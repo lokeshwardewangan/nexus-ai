@@ -1,0 +1,12 @@
+echo "🔵 Starting Pre-Commit Hook..."
+echo "🧹 Running code formatter..."
+
+npm run format && git add .
+
+if [ $? -ne 0 ]; then
+  echo "❌ Formatting failed. Commit aborted."
+  exit 1
+fi
+
+echo "✅ Formatting completed successfully!"
+echo "🚀 Proceeding with commit..."
