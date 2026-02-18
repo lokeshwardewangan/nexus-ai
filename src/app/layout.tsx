@@ -11,6 +11,9 @@ const lexend = Lexend({
 export const metadata: Metadata = {
   title: "AI Chat — Powered by Vercel AI SDK",
   description: "A professional AI chatbot built with Next.js and the Vercel AI SDK",
+  icons: {
+    icon: "/favicon.ico?v=2",
+  },
 };
 
 export default function RootLayout({
