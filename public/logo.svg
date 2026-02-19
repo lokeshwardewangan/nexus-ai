@@ -1,0 +1,40 @@
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Nexus AI">
+  <defs>
+    <linearGradient id="nexusBg" x1="4" y1="2" x2="44" y2="46" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6366F1"/>
+      <stop offset="0.55" stop-color="#7C5CF5"/>
+      <stop offset="1" stop-color="#A855F7"/>
+    </linearGradient>
+    <radialGradient id="nexusGlow" cx="0.32" cy="0.28" r="0.85">
+      <stop stop-color="#FFFFFF" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="48" height="48" rx="13" fill="url(#nexusBg)"/>
+  <rect width="48" height="48" rx="13" fill="url(#nexusGlow)"/>
+
+  <!-- links from the central hub to the outer nodes -->
+  <g stroke="#FFFFFF" stroke-width="1.7" stroke-linecap="round">
+    <path d="M24 24 L24 12.5" opacity="0.95"/>
+    <path d="M24 24 L34.4 18" opacity="0.6"/>
+    <path d="M24 24 L34.4 30" opacity="0.6"/>
+    <path d="M24 24 L24 35.5" opacity="0.95"/>
+    <path d="M24 24 L13.6 30" opacity="0.6"/>
+    <path d="M24 24 L13.6 18" opacity="0.6"/>
+  </g>
+
+  <!-- nodes -->
+  <g fill="#FFFFFF">
+    <circle cx="24" cy="12.5" r="2.7"/>
+    <circle cx="24" cy="35.5" r="2.7"/>
+    <circle cx="34.4" cy="18" r="2.3" fill-opacity="0.92"/>
+    <circle cx="34.4" cy="30" r="2.3" fill-opacity="0.92"/>
+    <circle cx="13.6" cy="18" r="2.3" fill-opacity="0.92"/>
+    <circle cx="13.6" cy="30" r="2.3" fill-opacity="0.92"/>
+  </g>
+
+  <!-- central hub -->
+  <circle cx="24" cy="24" r="5.4" fill="#FFFFFF"/>
+  <circle cx="24" cy="24" r="2.5" fill="#7C5CF5"/>
+</svg>

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Lexend } from "next/font/google";
 import "./globals.css";
+import { Providers } from "@/providers";
+import { siteConfig } from "@/config/site";
 
 const lexend = Lexend({
   variable: "--font-lexend",
@@ -9,8 +11,11 @@ const lexend = Lexend({
 });
 
 export const metadata: Metadata = {
-  title: "AI Chat — Powered by Vercel AI SDK",
-  description: "A professional AI chatbot built with Next.js and the Vercel AI SDK",
+  title: {
+    default: `${siteConfig.name} — ${siteConfig.tagline}`,
+    template: `%s · ${siteConfig.name}`,
+  },
+  description: siteConfig.description,
   icons: {
     icon: "/favicon.ico?v=2",
   },
@@ -22,8 +27,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <body className={`${lexend.variable} font-sans antialiased`}>{children}</body>
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${lexend.variable} font-sans antialiased`}>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }
