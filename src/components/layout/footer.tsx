@@ -15,8 +15,8 @@ const sections = [
   {
     title: "Studio",
     links: [
-      { label: "Open studio", href: "/chat" },
-      { label: "Chat with docs", href: "#documents" },
+      { label: "Open studio", href: "/studio" },
+      { label: "Chat with docs", href: "/studio/documents" },
     ],
   },
 ];

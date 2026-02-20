@@ -34,7 +34,7 @@ export function CtaSection() {
 
           <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Button asChild size="lg">
-              <Link href="/chat">
+              <Link href="/studio">
                 Open the studio
                 <ArrowRight className="size-4" />
               </Link>

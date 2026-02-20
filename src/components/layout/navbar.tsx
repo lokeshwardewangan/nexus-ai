@@ -28,10 +28,13 @@ export function Navbar() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <ThemeToggle />
+          <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
+            <Link href="/login">Log in</Link>
+          </Button>
           <Button asChild size="sm" className="hidden sm:inline-flex">
-            <Link href="/chat">Open app</Link>
+            <Link href="/studio">Open studio</Link>
           </Button>
         </div>
       </div>

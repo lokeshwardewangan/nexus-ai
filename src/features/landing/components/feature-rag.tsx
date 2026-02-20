@@ -41,7 +41,7 @@ export function FeatureRag() {
           </ul>
 
           <Button asChild className="mt-8">
-            <Link href="/chat">
+            <Link href="/studio/documents">
               Try document chat
               <ArrowRight className="size-4" />
             </Link>

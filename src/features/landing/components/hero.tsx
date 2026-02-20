@@ -60,7 +60,7 @@ export function Hero() {
           className="mt-8 flex flex-col gap-3 sm:flex-row"
         >
           <Button asChild size="lg">
-            <Link href="/chat">
+            <Link href="/studio">
               Open the studio
               <ArrowRight className="size-4" />
             </Link>
