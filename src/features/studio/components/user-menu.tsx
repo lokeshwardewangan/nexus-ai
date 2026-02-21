@@ -11,13 +11,32 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { createClient } from "@/lib/supabase/client";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
+import type { StudioUser } from "@/types/user";
 
-/**
- * Account menu. The signed-in user is a placeholder until Supabase auth is
- * wired; "Log out" returns to the login screen.
- */
-export function UserMenu() {
+function initials(name: string): string {
+  return (
+    name
+      .split(/\s+/)
+      .map((part) => part[0])
+      .filter(Boolean)
+      .slice(0, 2)
+      .join("")
+      .toUpperCase() || "U"
+  );
+}
+
+export function UserMenu({ user }: { user: StudioUser }) {
   const router = useRouter();
+
+  async function logout() {
+    if (isSupabaseConfigured) {
+      await createClient().auth.signOut();
+    }
+    router.push("/login");
+    router.refresh();
+  }
 
   return (
     <DropdownMenu>
@@ -25,12 +44,12 @@ export function UserMenu() {
         <button className="hover:bg-accent flex w-full items-center gap-3 rounded-lg p-2 text-left transition-colors">
           <Avatar className="size-8">
             <AvatarFallback className="bg-brand-gradient text-xs font-semibold text-white">
-              JD
+              {initials(user.name)}
             </AvatarFallback>
           </Avatar>
           <div className="min-w-0">
-            <p className="truncate text-sm font-medium">Jane Doe</p>
-            <p className="text-muted-foreground truncate text-xs">jane@example.com</p>
+            <p className="truncate text-sm font-medium">{user.name}</p>
+            <p className="text-muted-foreground truncate text-xs">{user.email}</p>
           </div>
         </button>
       </DropdownMenuTrigger>
@@ -40,7 +59,7 @@ export function UserMenu() {
           Settings
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => router.push("/login")}>
+        <DropdownMenuItem onClick={logout}>
           <LogOut className="size-4" />
           Log out
         </DropdownMenuItem>

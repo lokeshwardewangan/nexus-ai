@@ -8,6 +8,7 @@ import { assistants } from "@/config/assistants";
 import { Logo } from "@/components/layout/logo";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import type { StudioUser } from "@/types/user";
 import { UserMenu } from "./user-menu";
 
 const mainNav = [
@@ -15,7 +16,7 @@ const mainNav = [
   { label: "Documents", href: "/studio/documents", icon: FileText },
 ];
 
-export function StudioNav({ onNavigate }: { onNavigate?: () => void }) {
+export function StudioNav({ onNavigate, user }: { onNavigate?: () => void; user: StudioUser }) {
   const pathname = usePathname();
 
   const itemClass = (active: boolean) =>
@@ -80,7 +81,7 @@ export function StudioNav({ onNavigate }: { onNavigate?: () => void }) {
       </div>
 
       <div className="border-border border-t p-3">
-        <UserMenu />
+        <UserMenu user={user} />
       </div>
     </div>
   );

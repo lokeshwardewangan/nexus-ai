@@ -2,23 +2,39 @@
 
 import { useRouter } from "next/navigation";
 import { Github } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { createClient } from "@/lib/supabase/client";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
 
-/**
- * Social sign-in entry points. Navigation is a placeholder until Supabase
- * OAuth is wired in the backend phase.
- */
+type Provider = "google" | "github";
+
 export function OAuthButtons() {
   const router = useRouter();
 
+  async function signIn(provider: Provider) {
+    // Demo mode: no provider configured, just enter the studio.
+    if (!isSupabaseConfigured) {
+      router.push("/studio");
+      return;
+    }
+
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
+    });
+    if (error) toast.error(error.message);
+  }
+
   return (
     <div className="grid grid-cols-2 gap-3">
-      <Button variant="outline" type="button" onClick={() => router.push("/studio")}>
+      <Button variant="outline" type="button" onClick={() => signIn("google")}>
         <GoogleIcon />
         Google
       </Button>
-      <Button variant="outline" type="button" onClick={() => router.push("/studio")}>
+      <Button variant="outline" type="button" onClick={() => signIn("github")}>
         <Github className="size-4" />
         GitHub
       </Button>

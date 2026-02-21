@@ -4,11 +4,14 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { loginSchema, signupSchema } from "@/lib/validations/auth";
+import { createClient } from "@/lib/supabase/client";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { OAuthButtons } from "./oauth-buttons";
 
 type Mode = "login" | "signup";
@@ -41,7 +44,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const data = Object.fromEntries(new FormData(event.currentTarget));
     const schema = mode === "signup" ? signupSchema : loginSchema;
@@ -59,8 +62,49 @@ export function AuthForm({ mode }: { mode: Mode }) {
 
     setErrors({});
     setLoading(true);
-    // Auth is wired to Supabase in the backend phase; enter the studio for now.
+
+    // Without Supabase keys, run in demo mode and just enter the studio.
+    if (!isSupabaseConfigured) {
+      router.push("/studio");
+      return;
+    }
+
+    const supabase = createClient();
+    const email = String(data.email);
+    const password = String(data.password);
+
+    if (mode === "signup") {
+      const { data: signUp, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { full_name: String(data.name) },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+      if (error) {
+        toast.error(error.message);
+        setLoading(false);
+        return;
+      }
+      if (signUp.session) {
+        router.push("/studio");
+        router.refresh();
+      } else {
+        toast.success("Check your email to confirm your account.");
+        setLoading(false);
+      }
+      return;
+    }
+
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      toast.error(error.message);
+      setLoading(false);
+      return;
+    }
     router.push("/studio");
+    router.refresh();
   }
 
   return (

@@ -6,16 +6,17 @@ import { Menu } from "lucide-react";
 import { Logo } from "@/components/layout/logo";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import type { StudioUser } from "@/types/user";
 import { StudioNav } from "./studio-nav";
 
-export function StudioShell({ children }: { children: React.ReactNode }) {
+export function StudioShell({ children, user }: { children: React.ReactNode; user: StudioUser }) {
   const [open, setOpen] = useState(false);
 
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Desktop sidebar */}
       <aside className="border-border bg-sidebar hidden w-64 shrink-0 border-r md:block">
-        <StudioNav />
+        <StudioNav user={user} />
       </aside>
 
       {/* Main column */}
@@ -30,7 +31,7 @@ export function StudioShell({ children }: { children: React.ReactNode }) {
             </SheetTrigger>
             <SheetContent side="left" className="bg-sidebar w-72 p-0">
               <SheetTitle className="sr-only">Navigation</SheetTitle>
-              <StudioNav onNavigate={() => setOpen(false)} />
+              <StudioNav user={user} onNavigate={() => setOpen(false)} />
             </SheetContent>
           </Sheet>
           <Logo />
