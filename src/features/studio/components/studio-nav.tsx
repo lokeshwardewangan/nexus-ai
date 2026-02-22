@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FileText, LayoutGrid, Plus } from "lucide-react";
+import { FileText, LayoutGrid, MessageSquare, Plus } from "lucide-react";
 
-import { assistants } from "@/config/assistants";
+import { assistants, getAssistant } from "@/config/assistants";
 import { Logo } from "@/components/layout/logo";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { StudioUser } from "@/types/user";
+import type { ConversationSummary } from "@/types/conversation";
 import { UserMenu } from "./user-menu";
 
 const mainNav = [
@@ -16,7 +17,15 @@ const mainNav = [
   { label: "Documents", href: "/studio/documents", icon: FileText },
 ];
 
-export function StudioNav({ onNavigate, user }: { onNavigate?: () => void; user: StudioUser }) {
+export function StudioNav({
+  onNavigate,
+  user,
+  conversations,
+}: {
+  onNavigate?: () => void;
+  user: StudioUser;
+  conversations: ConversationSummary[];
+}) {
   const pathname = usePathname();
 
   const itemClass = (active: boolean) =>
@@ -59,30 +68,61 @@ export function StudioNav({ onNavigate, user }: { onNavigate?: () => void; user:
         })}
       </nav>
 
-      <p className="text-muted-foreground px-5 pt-5 pb-2 text-xs font-medium tracking-wider uppercase">
-        Assistants
-      </p>
-      <div className="min-h-0 flex-1 space-y-0.5 overflow-y-auto px-3 pb-3">
-        {assistants.map((assistant) => {
-          const href = `/studio/chat/${assistant.id}`;
-          const Icon = assistant.icon;
-          return (
-            <Link
-              key={assistant.id}
-              href={href}
-              onClick={onNavigate}
-              className={itemClass(pathname === href)}
-            >
-              <Icon className="size-4 shrink-0" />
-              <span className="truncate">{assistant.name}</span>
-            </Link>
-          );
-        })}
+      <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-3">
+        {conversations.length > 0 && (
+          <>
+            <SectionLabel>Recent</SectionLabel>
+            <div className="space-y-0.5">
+              {conversations.map((conversation) => {
+                const href = `/studio/c/${conversation.id}`;
+                const Icon = getAssistant(conversation.assistantId)?.icon ?? MessageSquare;
+                return (
+                  <Link
+                    key={conversation.id}
+                    href={href}
+                    onClick={onNavigate}
+                    className={itemClass(pathname === href)}
+                  >
+                    <Icon className="size-4 shrink-0" />
+                    <span className="truncate">{conversation.title}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </>
+        )}
+
+        <SectionLabel>Assistants</SectionLabel>
+        <div className="space-y-0.5">
+          {assistants.map((assistant) => {
+            const href = `/studio/chat/${assistant.id}`;
+            const Icon = assistant.icon;
+            return (
+              <Link
+                key={assistant.id}
+                href={href}
+                onClick={onNavigate}
+                className={itemClass(pathname === href)}
+              >
+                <Icon className="size-4 shrink-0" />
+                <span className="truncate">{assistant.name}</span>
+              </Link>
+            );
+          })}
+        </div>
       </div>
 
       <div className="border-border border-t p-3">
         <UserMenu user={user} />
       </div>
     </div>
+  );
+}
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="text-muted-foreground px-2 pt-4 pb-2 text-xs font-medium tracking-wider uppercase">
+      {children}
+    </p>
   );
 }

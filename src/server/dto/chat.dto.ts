@@ -9,15 +9,17 @@ import type { UIMessage } from "ai";
  */
 const chatRequestSchema = z.object({
   assistantId: z.string().optional(),
+  conversationId: z.string().optional(),
   messages: z.array(z.unknown()).default([]),
 });
 
 export interface ChatRequest {
   assistantId?: string;
+  conversationId?: string;
   messages: UIMessage[];
 }
 
 export function parseChatRequest(body: unknown): ChatRequest {
-  const { assistantId, messages } = chatRequestSchema.parse(body);
-  return { assistantId, messages: messages as UIMessage[] };
+  const { assistantId, conversationId, messages } = chatRequestSchema.parse(body);
+  return { assistantId, conversationId, messages: messages as UIMessage[] };
 }

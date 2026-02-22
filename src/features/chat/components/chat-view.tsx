@@ -9,6 +9,8 @@ import { toast } from "sonner";
 import { getAssistant, type Assistant } from "@/config/assistants";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { createConversationAction } from "../actions";
 import { Markdown } from "./markdown";
 
 function modelLabel(model: string): string {
@@ -21,9 +23,21 @@ function messageText(message: UIMessage): string {
   return message.parts.map((part) => (part.type === "text" ? part.text : "")).join("");
 }
 
-export function ChatView({ assistantId }: { assistantId: string }) {
+export function ChatView({
+  assistantId,
+  conversationId: initialConversationId,
+  initialMessages,
+}: {
+  assistantId: string;
+  conversationId?: string;
+  initialMessages?: UIMessage[];
+}) {
   const assistant = getAssistant(assistantId);
-  const { messages, sendMessage, status, error } = useChat();
+  const conversationIdRef = useRef(initialConversationId);
+  const { messages, sendMessage, status, error } = useChat({
+    id: initialConversationId,
+    messages: initialMessages,
+  });
   const [input, setInput] = useState("");
   const endRef = useRef<HTMLDivElement>(null);
 
@@ -36,10 +50,22 @@ export function ChatView({ assistantId }: { assistantId: string }) {
   if (!assistant) return null;
   const Icon = assistant.icon;
 
-  function submit(text: string) {
+  async function submit(text: string) {
     const value = text.trim();
     if (!value || isStreaming) return;
-    sendMessage({ text: value }, { body: { assistantId } });
+
+    // Lazily create a conversation on the first message, then reflect it in the
+    // URL without remounting so the chat keeps streaming.
+    let conversationId = conversationIdRef.current;
+    if (!conversationId && isSupabaseConfigured) {
+      conversationId = (await createConversationAction(assistantId)) ?? undefined;
+      if (conversationId) {
+        conversationIdRef.current = conversationId;
+        window.history.replaceState(null, "", `/studio/c/${conversationId}`);
+      }
+    }
+
+    sendMessage({ text: value }, { body: { assistantId, conversationId } });
     setInput("");
   }
 

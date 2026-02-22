@@ -7,16 +7,25 @@ import { Logo } from "@/components/layout/logo";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import type { StudioUser } from "@/types/user";
+import type { ConversationSummary } from "@/types/conversation";
 import { StudioNav } from "./studio-nav";
 
-export function StudioShell({ children, user }: { children: React.ReactNode; user: StudioUser }) {
+export function StudioShell({
+  children,
+  user,
+  conversations,
+}: {
+  children: React.ReactNode;
+  user: StudioUser;
+  conversations: ConversationSummary[];
+}) {
   const [open, setOpen] = useState(false);
 
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Desktop sidebar */}
       <aside className="border-border bg-sidebar hidden w-64 shrink-0 border-r md:block">
-        <StudioNav user={user} />
+        <StudioNav user={user} conversations={conversations} />
       </aside>
 
       {/* Main column */}
@@ -31,7 +40,11 @@ export function StudioShell({ children, user }: { children: React.ReactNode; use
             </SheetTrigger>
             <SheetContent side="left" className="bg-sidebar w-72 p-0">
               <SheetTitle className="sr-only">Navigation</SheetTitle>
-              <StudioNav user={user} onNavigate={() => setOpen(false)} />
+              <StudioNav
+                user={user}
+                conversations={conversations}
+                onNavigate={() => setOpen(false)}
+              />
             </SheetContent>
           </Sheet>
           <Logo />
