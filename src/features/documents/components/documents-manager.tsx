@@ -6,52 +6,85 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import type { DocumentStatus, DocumentSummary } from "@/types/document";
 
-type DocStatus = "processing" | "ready";
-
-interface StudioDocument {
+interface DocItem {
   id: string;
   name: string;
+  status: DocumentStatus;
   size: string;
-  status: DocStatus;
 }
 
-const initialDocuments: StudioDocument[] = [
+const DEMO_DOCS: DocItem[] = [
   { id: "seed-1", name: "Q3-financial-report.pdf", size: "2.4 MB", status: "ready" },
   { id: "seed-2", name: "product-spec.pdf", size: "812 KB", status: "ready" },
 ];
 
-function formatSize(bytes: number): string {
+function formatSize(bytes: number | null): string {
+  if (bytes == null) return "";
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export function DocumentsManager() {
-  const [documents, setDocuments] = useState<StudioDocument[]>(initialDocuments);
+function toItem(doc: DocumentSummary): DocItem {
+  return { id: doc.id, name: doc.name, status: doc.status, size: formatSize(doc.sizeBytes) };
+}
+
+export function DocumentsManager({
+  configured,
+  initialDocuments,
+}: {
+  configured: boolean;
+  initialDocuments: DocumentSummary[];
+}) {
+  const [documents, setDocuments] = useState<DocItem[]>(() =>
+    configured ? initialDocuments.map(toItem) : DEMO_DOCS,
+  );
   const [dragging, setDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  function addFiles(files: FileList | null) {
+  async function addFiles(files: FileList | null) {
     if (!files?.length) return;
 
-    const added: StudioDocument[] = Array.from(files).map((file, index) => ({
-      id: `${Date.now()}-${index}`,
-      name: file.name,
-      size: formatSize(file.size),
-      status: "processing",
-    }));
+    for (const file of Array.from(files)) {
+      const tempId = `tmp-${Date.now()}-${file.name}`;
+      setDocuments((prev) => [
+        { id: tempId, name: file.name, status: "processing", size: formatSize(file.size) },
+        ...prev,
+      ]);
 
-    setDocuments((prev) => [...added, ...prev]);
-    toast.success(`${added.length} document${added.length > 1 ? "s" : ""} uploaded`);
+      // Demo mode: simulate the embedding pipeline.
+      if (!configured) {
+        setTimeout(() => {
+          setDocuments((prev) =>
+            prev.map((item) => (item.id === tempId ? { ...item, status: "ready" } : item)),
+          );
+        }, 1600);
+        continue;
+      }
 
-    // Simulate the embedding pipeline; replaced by the real RAG flow later.
-    for (const doc of added) {
-      setTimeout(() => {
+      try {
+        const body = new FormData();
+        body.append("file", file);
+        const response = await fetch("/api/documents", { method: "POST", body });
+        if (!response.ok) throw new Error();
+        const doc: DocumentSummary = await response.json();
+        setDocuments((prev) => prev.map((item) => (item.id === tempId ? toItem(doc) : item)));
+        toast.success(`Added ${file.name}`);
+      } catch {
         setDocuments((prev) =>
-          prev.map((item) => (item.id === doc.id ? { ...item, status: "ready" } : item)),
+          prev.map((item) => (item.id === tempId ? { ...item, status: "failed" } : item)),
         );
-      }, 1600);
+        toast.error(`Couldn't process ${file.name}`);
+      }
+    }
+  }
+
+  async function remove(id: string) {
+    setDocuments((prev) => prev.filter((item) => item.id !== id));
+    if (configured && !id.startsWith("tmp-") && !id.startsWith("seed-")) {
+      await fetch(`/api/documents/${id}`, { method: "DELETE" }).catch(() => {});
     }
   }
 
@@ -108,11 +141,7 @@ export function DocumentsManager() {
         ) : (
           <div className="mt-4 grid gap-3">
             {documents.map((doc) => (
-              <DocumentRow
-                key={doc.id}
-                document={doc}
-                onRemove={() => setDocuments((prev) => prev.filter((item) => item.id !== doc.id))}
-              />
+              <DocumentRow key={doc.id} document={doc} onRemove={() => remove(doc.id)} />
             ))}
           </div>
         )}
@@ -121,7 +150,7 @@ export function DocumentsManager() {
   );
 }
 
-function DocumentRow({ document, onRemove }: { document: StudioDocument; onRemove: () => void }) {
+function DocumentRow({ document, onRemove }: { document: DocItem; onRemove: () => void }) {
   return (
     <div className="border-border flex items-center gap-4 rounded-xl border p-4">
       <span className="bg-secondary flex size-10 shrink-0 items-center justify-center rounded-lg">
@@ -129,19 +158,10 @@ function DocumentRow({ document, onRemove }: { document: StudioDocument; onRemov
       </span>
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium">{document.name}</p>
-        <p className="text-muted-foreground text-xs">{document.size}</p>
+        {document.size && <p className="text-muted-foreground text-xs">{document.size}</p>}
       </div>
 
-      {document.status === "processing" ? (
-        <span className="text-muted-foreground inline-flex items-center gap-1.5 text-xs">
-          <Loader2 className="size-3.5 animate-spin" />
-          Processing
-        </span>
-      ) : (
-        <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
-          Ready
-        </span>
-      )}
+      <StatusBadge status={document.status} />
 
       <Button
         variant="ghost"
@@ -153,5 +173,28 @@ function DocumentRow({ document, onRemove }: { document: StudioDocument; onRemov
         <Trash2 className="size-4" />
       </Button>
     </div>
+  );
+}
+
+function StatusBadge({ status }: { status: DocumentStatus }) {
+  if (status === "processing") {
+    return (
+      <span className="text-muted-foreground inline-flex items-center gap-1.5 text-xs">
+        <Loader2 className="size-3.5 animate-spin" />
+        Processing
+      </span>
+    );
+  }
+  if (status === "failed") {
+    return (
+      <span className="bg-destructive/10 text-destructive inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium">
+        Failed
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+      Ready
+    </span>
   );
 }
