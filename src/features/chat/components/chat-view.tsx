@@ -34,10 +34,12 @@ export function ChatView({
 }) {
   const assistant = getAssistant(assistantId);
   const conversationIdRef = useRef(initialConversationId);
-  const { messages, sendMessage, status, error } = useChat({
-    id: initialConversationId,
-    messages: initialMessages,
-  });
+  // Only pass `id`/`messages` when resuming a saved conversation. Passing an
+  // `id` key of `undefined` makes useChat recreate its Chat every render
+  // (it checks `"id" in options`), which wipes streamed messages.
+  const { messages, sendMessage, status, error } = useChat(
+    initialConversationId ? { id: initialConversationId, messages: initialMessages } : {},
+  );
   const [input, setInput] = useState("");
   const endRef = useRef<HTMLDivElement>(null);
 

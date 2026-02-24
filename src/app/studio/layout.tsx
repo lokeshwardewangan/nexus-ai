@@ -2,6 +2,9 @@ import { StudioShell } from "@/features/studio/components/studio-shell";
 import { getCurrentUser } from "@/server/services/user.service";
 import { listRecentConversations } from "@/server/services/conversation.service";
 
+// The studio is per-user and auth-gated, so it always renders dynamically.
+export const dynamic = "force-dynamic";
+
 export default async function StudioLayout({ children }: { children: React.ReactNode }) {
   const [user, conversations] = await Promise.all([getCurrentUser(), listRecentConversations()]);
 

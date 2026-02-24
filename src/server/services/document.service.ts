@@ -67,20 +67,29 @@ export async function ingestDocument(file: File): Promise<DocumentSummary> {
 
 export async function listDocuments(): Promise<DocumentSummary[]> {
   if (!isSupabaseConfigured) return [];
-  const user = await findAuthUser();
-  if (!user) return [];
+  try {
+    const user = await findAuthUser();
+    if (!user) return [];
 
-  const rows = await selectDocumentsByUser(user.id);
-  return rows.map((row) => ({
-    id: row.id,
-    name: row.name,
-    status: row.status,
-    sizeBytes: row.size_bytes,
-    createdAt: row.created_at,
-  }));
+    const rows = await selectDocumentsByUser(user.id);
+    return rows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      status: row.status,
+      sizeBytes: row.size_bytes,
+      createdAt: row.created_at,
+    }));
+  } catch (error) {
+    console.error("[document] listDocuments failed", error);
+    return [];
+  }
 }
 
 export async function removeDocument(id: string): Promise<void> {
   if (!isSupabaseConfigured) return;
-  await deleteDocument(id); // RLS scopes deletion to the owner
+  try {
+    await deleteDocument(id); // RLS scopes deletion to the owner
+  } catch (error) {
+    console.error("[document] removeDocument failed", error);
+  }
 }

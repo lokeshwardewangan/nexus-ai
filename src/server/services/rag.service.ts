@@ -19,22 +19,27 @@ function messageText(message: UIMessage): string {
 export async function retrieveContext(query: string, count = 6): Promise<RetrievedChunk[]> {
   if (!isSupabaseConfigured || !query.trim()) return [];
 
-  const user = await findAuthUser();
-  if (!user) return [];
+  try {
+    const user = await findAuthUser();
+    if (!user) return [];
 
-  const embedding = await embedQuery(query);
-  const [rows, documents] = await Promise.all([
-    matchChunks(user.id, embedding, count),
-    selectDocumentsByUser(user.id),
-  ]);
+    const embedding = await embedQuery(query);
+    const [rows, documents] = await Promise.all([
+      matchChunks(user.id, embedding, count),
+      selectDocumentsByUser(user.id),
+    ]);
 
-  const nameById = new Map(documents.map((doc) => [doc.id, doc.name]));
-  return rows.map((row) => ({
-    documentId: row.document_id,
-    documentName: nameById.get(row.document_id) ?? "Document",
-    content: row.content,
-    similarity: row.similarity,
-  }));
+    const nameById = new Map(documents.map((doc) => [doc.id, doc.name]));
+    return rows.map((row) => ({
+      documentId: row.document_id,
+      documentName: nameById.get(row.document_id) ?? "Document",
+      content: row.content,
+      similarity: row.similarity,
+    }));
+  } catch (error) {
+    console.error("[rag] retrieveContext failed", error);
+    return [];
+  }
 }
 
 /** Streams an answer grounded in the user's documents, with inline citations. */

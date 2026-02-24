@@ -91,8 +91,8 @@ export function AuthForm({ mode }: { mode: Mode }) {
         router.push("/studio");
         router.refresh();
       } else {
-        toast.success("Check your email to confirm your account.");
-        setLoading(false);
+        // Email confirmation required — show the dedicated check-email page.
+        router.push(`/verify-email?email=${encodeURIComponent(email)}`);
       }
       return;
     }
