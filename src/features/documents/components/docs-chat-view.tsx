@@ -4,14 +4,16 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
-import { ArrowUp, FileText, Upload } from "lucide-react";
+import { ArrowUp, Check, FileText, Upload } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 import { Markdown } from "@/features/chat/components/markdown";
+import type { DocumentSummary } from "@/types/document";
 
 const STARTERS = [
-  "Summarize my documents",
+  "Summarize these documents",
   "What are the key points?",
   "What does it say about pricing?",
 ];
@@ -20,36 +22,49 @@ function messageText(message: UIMessage): string {
   return message.parts.map((part) => (part.type === "text" ? part.text : "")).join("");
 }
 
-export function DocsChatView() {
+export function DocsChatView({ documents }: { documents: DocumentSummary[] }) {
   const [transport] = useState(() => new DefaultChatTransport({ api: "/api/documents/chat" }));
   const { messages, sendMessage, status, error } = useChat({ transport });
   const [input, setInput] = useState("");
+  const [excluded, setExcluded] = useState<Set<string>>(new Set());
   const endRef = useRef<HTMLDivElement>(null);
 
   const isStreaming = status === "streaming" || status === "submitted";
+  const includedIds = documents.filter((doc) => !excluded.has(doc.id)).map((doc) => doc.id);
+  const allIncluded = excluded.size === 0;
+  const hasDocuments = documents.length > 0;
+  const canSend = hasDocuments && includedIds.length > 0;
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isStreaming]);
 
+  function toggle(id: string) {
+    setExcluded((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
   function submit(text: string) {
     const value = text.trim();
-    if (!value || isStreaming) return;
-    sendMessage({ text: value });
+    if (!value || isStreaming || !canSend) return;
+    sendMessage({ text: value }, { body: { documentIds: allIncluded ? undefined : includedIds } });
     setInput("");
   }
 
   return (
     <div className="flex h-full flex-col">
+      {/* Header */}
       <header className="border-border flex items-center gap-3 border-b px-5 py-3">
         <span className="bg-brand-gradient flex size-9 items-center justify-center rounded-lg text-white">
           <FileText className="size-4.5" />
         </span>
         <div className="min-w-0">
           <h1 className="truncate text-sm font-semibold">Chat with your documents</h1>
-          <p className="text-muted-foreground truncate text-xs">
-            Answers cited to your uploaded files
-          </p>
+          <p className="text-muted-foreground truncate text-xs">Answers cite the source file</p>
         </div>
         <Button asChild variant="outline" size="sm" className="ml-auto">
           <Link href="/studio/documents">
@@ -59,9 +74,55 @@ export function DocsChatView() {
         </Button>
       </header>
 
+      {/* Scope selector — which documents the answers come from */}
+      {hasDocuments && (
+        <div className="border-border bg-card/30 border-b px-5 py-3">
+          <p className="text-xs">
+            <span className="text-foreground font-medium">Documents in this chat</span>
+            <span className="text-muted-foreground"> — tap a file to include or exclude it</span>
+          </p>
+          <div className="mt-2.5 flex flex-wrap gap-2">
+            {documents.map((doc) => {
+              const included = !excluded.has(doc.id);
+              return (
+                <button
+                  key={doc.id}
+                  type="button"
+                  onClick={() => toggle(doc.id)}
+                  aria-pressed={included}
+                  title={doc.name}
+                  className={cn(
+                    "inline-flex max-w-[220px] items-center gap-2 rounded-lg border px-2.5 py-1.5 text-xs transition-colors",
+                    included
+                      ? "border-primary/50 bg-primary/10 text-foreground"
+                      : "border-border text-muted-foreground opacity-70 hover:opacity-100",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "flex size-4 shrink-0 items-center justify-center rounded-[5px] border",
+                      included
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-muted-foreground/40",
+                    )}
+                  >
+                    {included && <Check className="size-3" />}
+                  </span>
+                  <FileText className="size-3.5 shrink-0" />
+                  <span className="truncate">{doc.name}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Messages */}
       <div className="min-h-0 flex-1 overflow-y-auto">
         <div className="mx-auto max-w-3xl px-4 py-6">
-          {messages.length === 0 ? (
+          {!hasDocuments ? (
+            <NoDocuments />
+          ) : messages.length === 0 ? (
             <EmptyState onPick={submit} />
           ) : (
             <div className="space-y-6">
@@ -83,6 +144,7 @@ export function DocsChatView() {
         </div>
       </div>
 
+      {/* Composer */}
       <div className="border-border border-t px-4 py-3">
         <form
           onSubmit={(event) => {
@@ -94,6 +156,7 @@ export function DocsChatView() {
           <div className="border-border focus-within:border-primary/50 bg-card flex items-end gap-2 rounded-2xl border p-2 transition-colors">
             <Textarea
               value={input}
+              disabled={!canSend}
               onChange={(event) => setInput(event.target.value)}
               onKeyDown={(event) => {
                 if (event.key === "Enter" && !event.shiftKey) {
@@ -102,23 +165,49 @@ export function DocsChatView() {
                 }
               }}
               rows={1}
-              placeholder="Ask about your documents…"
+              placeholder={
+                hasDocuments ? "Ask about your documents…" : "Upload a document to get started"
+              }
               className="max-h-40 min-h-0 flex-1 resize-none border-0 bg-transparent px-2 py-1.5 shadow-none focus-visible:ring-0"
             />
             <Button
               type="submit"
               size="icon"
-              disabled={!input.trim() || isStreaming}
+              disabled={!input.trim() || isStreaming || !canSend}
               className="size-9 shrink-0 rounded-xl"
             >
               <ArrowUp className="size-4" />
             </Button>
           </div>
           <p className="text-muted-foreground mt-2 text-center text-xs">
-            Answers are grounded in your uploaded documents.
+            {!hasDocuments
+              ? "Upload a document on the Documents page to start."
+              : includedIds.length === 0
+                ? "Select at least one document to search."
+                : `Asking across ${includedIds.length} of ${documents.length} document${documents.length > 1 ? "s" : ""} — answers cite the source.`}
           </p>
         </form>
       </div>
+    </div>
+  );
+}
+
+function NoDocuments() {
+  return (
+    <div className="flex flex-col items-center pt-10 text-center">
+      <span className="bg-secondary flex size-14 items-center justify-center rounded-2xl">
+        <FileText className="size-6" />
+      </span>
+      <h2 className="mt-4 text-lg font-semibold">No documents yet</h2>
+      <p className="text-muted-foreground mt-1.5 max-w-md text-sm">
+        Upload a file first, then come back here to ask questions about it.
+      </p>
+      <Button asChild className="mt-6">
+        <Link href="/studio/documents">
+          <Upload className="size-4" />
+          Upload documents
+        </Link>
+      </Button>
     </div>
   );
 }
@@ -131,7 +220,7 @@ function EmptyState({ onPick }: { onPick: (text: string) => void }) {
       </span>
       <h2 className="mt-4 text-lg font-semibold">Ask your documents anything</h2>
       <p className="text-muted-foreground mt-1.5 max-w-md text-sm">
-        Questions are answered from the files you&apos;ve uploaded, with citations to the source.
+        Answers come from the documents selected above, and cite the file they came from.
       </p>
 
       <div className="mt-8 grid w-full max-w-lg gap-2.5 sm:grid-cols-3">

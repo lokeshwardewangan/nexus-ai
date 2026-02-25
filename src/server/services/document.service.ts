@@ -1,6 +1,8 @@
 import "server-only";
 
+import mammoth from "mammoth";
 import { extractText, getDocumentProxy } from "unpdf";
+import * as XLSX from "xlsx";
 
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { embedTexts } from "@/lib/ai/embeddings";
@@ -19,14 +21,29 @@ import type { DocumentSummary } from "@/types/document";
 const MAX_CHUNKS = 80;
 
 async function extractFileText(file: File): Promise<string> {
-  if (file.name.toLowerCase().endsWith(".pdf")) {
-    const buffer = new Uint8Array(await file.arrayBuffer());
-    const pdf = await getDocumentProxy(buffer);
+  const name = file.name.toLowerCase();
+  const buffer = Buffer.from(await file.arrayBuffer());
+
+  if (name.endsWith(".pdf")) {
+    const pdf = await getDocumentProxy(new Uint8Array(buffer));
     const { text } = await extractText(pdf, { mergePages: true });
     return text;
   }
-  // .txt / .md and other plain-text formats
-  return file.text();
+
+  if (name.endsWith(".docx")) {
+    const { value } = await mammoth.extractRawText({ buffer });
+    return value;
+  }
+
+  if (name.endsWith(".xlsx") || name.endsWith(".xls") || name.endsWith(".csv")) {
+    const workbook = XLSX.read(buffer, { type: "buffer" });
+    return workbook.SheetNames.map(
+      (sheet) => `# ${sheet}\n${XLSX.utils.sheet_to_csv(workbook.Sheets[sheet])}`,
+    ).join("\n\n");
+  }
+
+  // .txt, .md, .markdown, .json, and other plain-text formats
+  return new TextDecoder().decode(buffer);
 }
 
 /** Extracts, chunks, embeds, and stores a document for the signed-in user. */

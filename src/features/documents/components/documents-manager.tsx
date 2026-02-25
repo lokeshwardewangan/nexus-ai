@@ -68,15 +68,18 @@ export function DocumentsManager({
         const body = new FormData();
         body.append("file", file);
         const response = await fetch("/api/documents", { method: "POST", body });
-        if (!response.ok) throw new Error();
+        if (!response.ok) {
+          const data = await response.json().catch(() => null);
+          throw new Error(data?.error ?? "Upload failed");
+        }
         const doc: DocumentSummary = await response.json();
         setDocuments((prev) => prev.map((item) => (item.id === tempId ? toItem(doc) : item)));
         toast.success(`Added ${file.name}`);
-      } catch {
+      } catch (error) {
         setDocuments((prev) =>
           prev.map((item) => (item.id === tempId ? { ...item, status: "failed" } : item)),
         );
-        toast.error(`Couldn't process ${file.name}`);
+        toast.error(error instanceof Error ? error.message : `Couldn't process ${file.name}`);
       }
     }
   }
@@ -117,12 +120,14 @@ export function DocumentsManager({
           <Upload className="size-5" />
         </span>
         <p className="mt-4 text-sm font-medium">Drop files here, or click to upload</p>
-        <p className="text-muted-foreground mt-1 text-xs">PDF, TXT, or Markdown · up to 10 MB</p>
+        <p className="text-muted-foreground mt-1 text-xs">
+          PDF, Word, Excel, CSV, Markdown, or text · up to 10 MB
+        </p>
         <input
           ref={inputRef}
           type="file"
           multiple
-          accept=".pdf,.txt,.md"
+          accept=".pdf,.docx,.xlsx,.xls,.csv,.txt,.md,.markdown,.json"
           className="hidden"
           onChange={(event) => addFiles(event.target.files)}
         />
