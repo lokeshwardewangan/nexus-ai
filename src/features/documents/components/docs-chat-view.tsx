@@ -1,15 +1,16 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
-import { ArrowUp, Check, FileText, Upload } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, FileText, Upload } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { Markdown } from "@/features/chat/components/markdown";
+import { useAutoScroll } from "@/features/chat/use-auto-scroll";
 import type { DocumentSummary } from "@/types/document";
 
 const STARTERS = [
@@ -27,17 +28,13 @@ export function DocsChatView({ documents }: { documents: DocumentSummary[] }) {
   const { messages, sendMessage, status, error } = useChat({ transport });
   const [input, setInput] = useState("");
   const [excluded, setExcluded] = useState<Set<string>>(new Set());
-  const endRef = useRef<HTMLDivElement>(null);
+  const { containerRef, handleScroll, scrollToBottom, showJumpButton } = useAutoScroll(messages);
 
   const isStreaming = status === "streaming" || status === "submitted";
   const includedIds = documents.filter((doc) => !excluded.has(doc.id)).map((doc) => doc.id);
   const allIncluded = excluded.size === 0;
   const hasDocuments = documents.length > 0;
   const canSend = hasDocuments && includedIds.length > 0;
-
-  useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isStreaming]);
 
   function toggle(id: string) {
     setExcluded((prev) => {
@@ -118,30 +115,41 @@ export function DocsChatView({ documents }: { documents: DocumentSummary[] }) {
       )}
 
       {/* Messages */}
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-3xl px-4 py-6">
-          {!hasDocuments ? (
-            <NoDocuments />
-          ) : messages.length === 0 ? (
-            <EmptyState onPick={submit} />
-          ) : (
-            <div className="space-y-6">
-              {messages.map((message) => (
-                <MessageRow key={message.id} message={message} />
-              ))}
-              {isStreaming && messages.at(-1)?.role === "user" && <Thinking />}
-              {error && (
-                <p
-                  role="alert"
-                  className="border-destructive/40 bg-destructive/10 text-destructive rounded-xl border px-4 py-3 text-center text-sm"
-                >
-                  Something went wrong. Please try again.
-                </p>
-              )}
-              <div ref={endRef} />
-            </div>
-          )}
+      <div className="relative min-h-0 flex-1">
+        <div ref={containerRef} onScroll={handleScroll} className="h-full overflow-y-auto">
+          <div className="mx-auto max-w-3xl px-4 py-6">
+            {!hasDocuments ? (
+              <NoDocuments />
+            ) : messages.length === 0 ? (
+              <EmptyState onPick={submit} />
+            ) : (
+              <div className="space-y-6">
+                {messages.map((message) => (
+                  <MessageRow key={message.id} message={message} />
+                ))}
+                {isStreaming && messages.at(-1)?.role === "user" && <Thinking />}
+                {error && (
+                  <p
+                    role="alert"
+                    className="border-destructive/40 bg-destructive/10 text-destructive rounded-xl border px-4 py-3 text-center text-sm"
+                  >
+                    Something went wrong. Please try again.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
         </div>
+        {showJumpButton && (
+          <button
+            type="button"
+            onClick={scrollToBottom}
+            aria-label="Scroll to latest"
+            className="border-border bg-card text-foreground hover:bg-accent absolute bottom-4 left-1/2 flex size-9 -translate-x-1/2 items-center justify-center rounded-full border shadow-md transition-colors"
+          >
+            <ArrowDown className="size-4" />
+          </button>
+        )}
       </div>
 
       {/* Composer */}

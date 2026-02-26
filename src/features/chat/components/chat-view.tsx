@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { type UIMessage } from "ai";
-import { ArrowUp, Check, Copy } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, Copy } from "lucide-react";
 import { toast } from "sonner";
 
 import { getAssistant, type Assistant } from "@/config/assistants";
@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { createConversationAction } from "../actions";
+import { useAutoScroll } from "../use-auto-scroll";
 import { Markdown } from "./markdown";
 
 function modelLabel(model: string): string {
@@ -41,13 +42,9 @@ export function ChatView({
     initialConversationId ? { id: initialConversationId, messages: initialMessages } : {},
   );
   const [input, setInput] = useState("");
-  const endRef = useRef<HTMLDivElement>(null);
+  const { containerRef, handleScroll, scrollToBottom, showJumpButton } = useAutoScroll(messages);
 
   const isStreaming = status === "streaming" || status === "submitted";
-
-  useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isStreaming]);
 
   if (!assistant) return null;
   const Icon = assistant.icon;
@@ -88,30 +85,41 @@ export function ChatView({
       </header>
 
       {/* Messages */}
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-3xl px-4 py-6">
-          {messages.length === 0 ? (
-            <EmptyState assistant={assistant} onPick={submit} />
-          ) : (
-            <div className="space-y-6">
-              {messages.map((message) => (
-                <MessageRow key={message.id} message={message} assistant={assistant} />
-              ))}
-              {isStreaming && messages.at(-1)?.role === "user" && (
-                <Thinking assistant={assistant} />
-              )}
-              {error && (
-                <p
-                  role="alert"
-                  className="border-destructive/40 bg-destructive/10 text-destructive rounded-xl border px-4 py-3 text-center text-sm"
-                >
-                  Something went wrong reaching the assistant. Please try again.
-                </p>
-              )}
-              <div ref={endRef} />
-            </div>
-          )}
+      <div className="relative min-h-0 flex-1">
+        <div ref={containerRef} onScroll={handleScroll} className="h-full overflow-y-auto">
+          <div className="mx-auto max-w-3xl px-4 py-6">
+            {messages.length === 0 ? (
+              <EmptyState assistant={assistant} onPick={submit} />
+            ) : (
+              <div className="space-y-6">
+                {messages.map((message) => (
+                  <MessageRow key={message.id} message={message} assistant={assistant} />
+                ))}
+                {isStreaming && messages.at(-1)?.role === "user" && (
+                  <Thinking assistant={assistant} />
+                )}
+                {error && (
+                  <p
+                    role="alert"
+                    className="border-destructive/40 bg-destructive/10 text-destructive rounded-xl border px-4 py-3 text-center text-sm"
+                  >
+                    Something went wrong reaching the assistant. Please try again.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
         </div>
+        {showJumpButton && (
+          <button
+            type="button"
+            onClick={scrollToBottom}
+            aria-label="Scroll to latest"
+            className="border-border bg-card text-foreground hover:bg-accent absolute bottom-4 left-1/2 flex size-9 -translate-x-1/2 items-center justify-center rounded-full border shadow-md transition-colors"
+          >
+            <ArrowDown className="size-4" />
+          </button>
+        )}
       </div>
 
       {/* Composer */}
