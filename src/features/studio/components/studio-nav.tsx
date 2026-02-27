@@ -7,6 +7,7 @@ import { FileText, LayoutGrid, MessageSquare, Plus } from "lucide-react";
 import { assistants, getAssistant } from "@/config/assistants";
 import { Logo } from "@/components/layout/logo";
 import { Button } from "@/components/ui/button";
+import { Hint } from "@/components/ui/hint";
 import { cn } from "@/lib/utils";
 import type { StudioUser } from "@/types/user";
 import type { ConversationSummary } from "@/types/conversation";
@@ -98,15 +99,24 @@ export function StudioNav({
             const href = `/studio/chat/${assistant.id}`;
             const Icon = assistant.icon;
             return (
-              <Link
+              <Hint
                 key={assistant.id}
-                href={href}
-                onClick={onNavigate}
-                className={itemClass(pathname === href)}
+                side="right"
+                align="center"
+                content={
+                  <div className="max-w-[220px]">
+                    <p className="font-medium">{assistant.name}</p>
+                    <p className="mt-0.5 text-[11px] leading-relaxed opacity-80">
+                      {assistant.description}
+                    </p>
+                  </div>
+                }
               >
-                <Icon className="size-4 shrink-0" />
-                <span className="truncate">{assistant.name}</span>
-              </Link>
+                <Link href={href} onClick={onNavigate} className={itemClass(pathname === href)}>
+                  <Icon className="size-4 shrink-0" />
+                  <span className="truncate">{assistant.name}</span>
+                </Link>
+              </Hint>
             );
           })}
         </div>
