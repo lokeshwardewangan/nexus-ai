@@ -1,12 +1,10 @@
-echo "🔵 Starting Pre-Commit Hook..."
-echo "🧹 Running code formatter..."
+echo "🔵 Running lint-staged (lint + format on staged files)..."
 
-npm run format && git add .
+pnpm exec lint-staged
 
 if [ $? -ne 0 ]; then
-  echo "❌ Formatting failed. Commit aborted."
+  echo "❌ Pre-commit checks failed. Commit aborted."
   exit 1
 fi
 
-echo "✅ Formatting completed successfully!"
-echo "🚀 Proceeding with commit..."
+echo "✅ Pre-commit checks passed!"
