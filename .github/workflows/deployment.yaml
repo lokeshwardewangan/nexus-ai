@@ -1,7 +1,10 @@
-name: "AI Chat Studio – CI/CD"
+name: "Nexus AI – CI"
 
 on:
   push:
+    branches:
+      - main
+  pull_request:
     branches:
       - main
 
@@ -13,18 +16,22 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      # Reads the pnpm version from the "packageManager" field in package.json,
+      # so CI matches the version used locally (and the committed lockfile).
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
-
-      - name: Setup PNPM
-        uses: pnpm/action-setup@v3
-        with:
-          version: 9
+          cache: pnpm
 
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
 
       - name: Build Project
         run: pnpm run build
