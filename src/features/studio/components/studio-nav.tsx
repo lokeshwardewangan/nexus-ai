@@ -33,7 +33,7 @@ export function StudioNav({
     cn(
       "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
       active
-        ? "bg-secondary text-foreground font-medium"
+        ? "bg-primary/10 text-primary font-medium"
         : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground",
     );
 
