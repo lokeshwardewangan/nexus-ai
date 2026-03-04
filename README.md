@@ -1,6 +1,6 @@
 # 🧠 Nexus AI
 
-> An AI studio with 12 specialized assistants and chat‑with‑your‑documents (RAG) — built with Next.js, the Vercel AI SDK, and Supabase.
+> An AI studio with 14 specialized assistants and chat‑with‑your‑documents (RAG) — built with Next.js, the Vercel AI SDK, and Supabase.
 
 Nexus AI is a production‑style AI workspace: a library of purpose‑built assistants (for engineers, founders, writers, and learners), per‑assistant streaming chat, and a flagship **document chat** that answers questions grounded in your own files with citations.
 
@@ -26,7 +26,7 @@ Nexus AI is a production‑style AI workspace: a library of purpose‑built assi
 ## ✨ Features
 
 - ⚡ **Streaming chat** with markdown rendering, copy, and starter prompts
-- 🧩 **12 specialized assistants** across Developer, Writing, Ideas, Career, Learning, and Health
+- 🧩 **14 specialized assistants** across Developer, DSA & Coding, Writing, Ideas, Career, Learning, and Health
 - 📄 **Chat with your documents (RAG)** — upload PDF, Word, Excel, CSV, or text → cited answers, scoped to the documents you choose
 - 🔀 **Multi‑model routing** — each assistant picks Gemini / GPT / Claude, gracefully falling back to Gemini
 - 🔐 **Auth + persistence** — Supabase login, per‑user saved conversations, RLS

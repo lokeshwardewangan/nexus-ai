@@ -1,15 +1,18 @@
 import {
+  Binary,
   Blocks,
   Briefcase,
   Code2,
   Database,
   Dumbbell,
+  GitBranch,
   GraduationCap,
   Languages,
   Lightbulb,
   Mic,
   Network,
   PenLine,
+  Puzzle,
   Rocket,
   ScrollText,
   UserRound,
@@ -29,7 +32,14 @@ import {
  * to the default provider when a given provider's API key is absent.
  */
 
-export type CategoryId = "developer" | "writing" | "ideas" | "career" | "learning" | "health";
+export type CategoryId =
+  | "developer"
+  | "dsa"
+  | "writing"
+  | "ideas"
+  | "career"
+  | "learning"
+  | "health";
 
 export interface Category {
   id: CategoryId;
@@ -47,6 +57,13 @@ export const categories: Category[] = [
     description: "Write, explain, and design software with a mentor.",
     icon: Code2,
     accent: "from-cyan-500 to-blue-600",
+  },
+  {
+    id: "dsa",
+    label: "DSA & Coding",
+    description: "Crack algorithms and ace coding interviews.",
+    icon: Binary,
+    accent: "from-sky-500 to-indigo-600",
   },
   {
     id: "writing",
@@ -153,6 +170,42 @@ export const assistants: Assistant[] = [
       "SQL: top 5 customers by total order value",
       "Regex to match an email address",
       "Explain this SQL join to me",
+    ],
+  },
+
+  // ── DSA & Coding ───────────────────────────────────────────────
+  {
+    id: "dsa-coach",
+    name: "DSA Coach",
+    tagline: "Crack data structures & algorithms.",
+    description:
+      "Solve DSA problems with the optimal approach, complexity analysis, and the pattern behind them — in any language.",
+    category: "dsa",
+    icon: GitBranch,
+    model: "google:gemini-2.5-flash",
+    systemPrompt:
+      "You are a DSA (data structures and algorithms) coach. For a problem: briefly restate it, explain the optimal approach (and a brute-force baseline when useful), give clean, well-commented code in the language the user asks for (default to Python or clear pseudocode), analyze time and space complexity in Big-O, and name the underlying pattern (two pointers, sliding window, dynamic programming, BFS/DFS, greedy, etc.). When teaching a concept, use a small example and a step-by-step dry run. If the user is practicing, offer a hint before revealing the full solution.",
+    starters: [
+      "Explain the sliding window pattern",
+      "Solve Two Sum optimally",
+      "How do I detect a cycle in a linked list?",
+    ],
+  },
+  {
+    id: "coding-practice",
+    name: "Coding Practice",
+    tagline: "Practice problems, tailored to you.",
+    description:
+      "Get LeetCode-style problems by topic and difficulty, with hints and feedback on your solutions.",
+    category: "dsa",
+    icon: Puzzle,
+    model: "google:gemini-2.5-flash-lite",
+    systemPrompt:
+      "You are a coding practice partner. Generate DSA/coding practice problems tailored to the user's topic and difficulty (easy, medium, or hard), LeetCode-style: a clear problem statement, constraints, and one worked example. Keep one problem in focus at a time. When the user submits a solution, review it for correctness, edge cases, and time/space complexity, and suggest cleaner alternatives. Give a hint before revealing a full solution.",
+    starters: [
+      "Give me a medium array problem",
+      "A hard dynamic programming challenge",
+      "Practice problems on binary trees",
     ],
   },
 

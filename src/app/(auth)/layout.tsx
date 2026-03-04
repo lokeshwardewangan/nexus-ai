@@ -3,9 +3,10 @@ import { ArrowLeft, Check } from "lucide-react";
 
 import { Logo } from "@/components/layout/logo";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { assistants } from "@/config/assistants";
 
 const highlights = [
-  "12 specialized assistants, one workspace",
+  `${assistants.length} specialized assistants, one workspace`,
   "Chat with your own documents — cited answers",
   "Powered by Gemini, GPT, and Claude",
 ];

@@ -12,7 +12,8 @@ export function AssistantsShowcase() {
           A specialist for <span className="text-gradient-brand">every task</span>
         </h2>
         <p className="text-muted-foreground mt-4 text-base text-pretty">
-          Twelve assistants across six categories — each tuned for what it does best.
+          {assistants.length} assistants across {categories.length} categories — each tuned for what
+          it does best.
         </p>
       </div>
 

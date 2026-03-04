@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { assistants } from "@/config/assistants";
 import { LibraryBrowser } from "@/features/studio/components/library-browser";
 
 export const metadata: Metadata = {
@@ -13,7 +14,7 @@ export default function StudioPage() {
         <header>
           <h1 className="text-2xl font-semibold tracking-tight">Assistant library</h1>
           <p className="text-muted-foreground mt-1.5">
-            Pick a specialist to start a conversation, or search across all 12.
+            Pick a specialist to start a conversation, or search across all {assistants.length}.
           </p>
         </header>
 

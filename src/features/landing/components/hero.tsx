@@ -5,7 +5,7 @@ import { motion } from "motion/react";
 import { ArrowRight, Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { categories } from "@/config/assistants";
+import { assistants, categories } from "@/config/assistants";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
@@ -28,7 +28,7 @@ export function Hero() {
           className="border-border bg-card/60 text-muted-foreground inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium backdrop-blur"
         >
           <Sparkles className="text-primary size-3.5" />
-          12 assistants · chat with your documents
+          {assistants.length} assistants · chat with your documents
         </motion.span>
 
         <motion.h1
