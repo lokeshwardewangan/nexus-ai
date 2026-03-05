@@ -6,6 +6,7 @@ import { FileText, LayoutGrid, MessageSquare, Plus } from "lucide-react";
 
 import { assistants, getAssistant } from "@/config/assistants";
 import { Logo } from "@/components/layout/logo";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Hint } from "@/components/ui/hint";
 import { cn } from "@/lib/utils";
@@ -104,7 +105,7 @@ export function StudioNav({
                 side="right"
                 align="center"
                 content={
-                  <div className="max-w-[220px]">
+                  <div className="max-w-55">
                     <p className="font-medium">{assistant.name}</p>
                     <p className="mt-0.5 text-[11px] leading-relaxed opacity-80">
                       {assistant.description}
@@ -122,8 +123,11 @@ export function StudioNav({
         </div>
       </div>
 
-      <div className="border-border border-t p-3">
-        <UserMenu user={user} />
+      <div className="border-border flex items-center gap-1.5 border-t p-2">
+        <div className="min-w-0 flex-1">
+          <UserMenu user={user} />
+        </div>
+        <ThemeToggle />
       </div>
     </div>
   );
