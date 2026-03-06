@@ -17,6 +17,14 @@ export async function updateSession(request: NextRequest) {
 
   if (!isSupabaseConfigured) return response;
 
+  // Safety net: if an auth code lands on any route (e.g. an email link pointed
+  // at the Site URL root), forward it to the callback handler to be exchanged.
+  if (request.nextUrl.searchParams.has("code") && request.nextUrl.pathname !== "/auth/callback") {
+    const callbackUrl = request.nextUrl.clone();
+    callbackUrl.pathname = "/auth/callback";
+    return NextResponse.redirect(callbackUrl);
+  }
+
   const supabase = createServerClient(supabaseConfig.url, supabaseConfig.anonKey, {
     cookies: {
       getAll() {
