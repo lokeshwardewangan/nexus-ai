@@ -150,6 +150,17 @@ export function AuthForm({ mode }: { mode: Mode }) {
           error={errors.password}
         />
 
+        {mode === "login" && (
+          <div className="text-right">
+            <Link
+              href="/forgot-password"
+              className="text-muted-foreground hover:text-foreground text-xs transition-colors"
+            >
+              Forgot password?
+            </Link>
+          </div>
+        )}
+
         <Button type="submit" className="w-full" disabled={loading}>
           {loading && <Loader2 className="size-4 animate-spin" />}
           {text.action}

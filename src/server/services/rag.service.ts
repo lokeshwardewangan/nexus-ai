@@ -5,6 +5,8 @@ import { convertToModelMessages, streamText, type UIMessage } from "ai";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { resolveModel } from "@/lib/ai/provider";
 import { embedQuery } from "@/lib/ai/embeddings";
+import { tokenCount } from "@/lib/ai/usage";
+import { recordTokenUsage } from "@/server/services/profile.service";
 import { findAuthUser } from "@/server/repositories/user.repository";
 import { matchChunks, selectDocumentsByUser } from "@/server/repositories/document.repository";
 import type { RetrievedChunk } from "@/types/document";
@@ -87,6 +89,9 @@ export async function streamDocumentAnswer(
     model: resolveModel(RAG_MODEL),
     system,
     messages: await convertToModelMessages(messages),
+    onFinish: async ({ usage }) => {
+      await recordTokenUsage(tokenCount(usage));
+    },
   });
 
   return result.toUIMessageStreamResponse();

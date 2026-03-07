@@ -4,8 +4,10 @@ import { convertToModelMessages, streamText, type UIMessage } from "ai";
 
 import { getAssistant } from "@/config/assistants";
 import { resolveModel } from "@/lib/ai/provider";
+import { tokenCount } from "@/lib/ai/usage";
 import type { ChatRequest } from "@/server/dto/chat.dto";
 import { persistMessage } from "./conversation.service";
+import { recordTokenUsage } from "./profile.service";
 
 const FALLBACK_MODEL = "google:gemini-2.5-flash-lite";
 
@@ -44,8 +46,9 @@ export async function streamAssistantReply({
     model: resolveModel(assistant?.model ?? FALLBACK_MODEL),
     system: assistant?.systemPrompt,
     messages: await convertToModelMessages(messages),
-    onFinish: async ({ text }) => {
+    onFinish: async ({ text, usage }) => {
       if (conversationId) await persistMessage(conversationId, "assistant", text);
+      await recordTokenUsage(tokenCount(usage));
     },
   });
 

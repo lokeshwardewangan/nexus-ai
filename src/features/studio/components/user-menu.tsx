@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LogOut, Settings } from "lucide-react";
 
@@ -54,9 +55,11 @@ export function UserMenu({ user }: { user: StudioUser }) {
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuItem>
-          <Settings className="size-4" />
-          Settings
+        <DropdownMenuItem asChild>
+          <Link href="/studio/profile">
+            <Settings className="size-4" />
+            Account
+          </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={logout}>
