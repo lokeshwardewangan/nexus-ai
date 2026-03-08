@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LogOut, Settings } from "lucide-react";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,8 +42,9 @@ export function UserMenu({ user }: { user: StudioUser }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="hover:bg-accent flex w-full items-center gap-3 rounded-lg p-2 text-left transition-colors">
+        <button className="hover:bg-accent flex w-full cursor-pointer items-center gap-3 rounded-lg p-2 text-left transition-colors">
           <Avatar className="size-8">
+            {user.avatarUrl && <AvatarImage src={user.avatarUrl} alt="" className="object-cover" />}
             <AvatarFallback className="bg-brand-gradient text-xs font-semibold text-white">
               {initials(user.name)}
             </AvatarFallback>

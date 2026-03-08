@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/ui/password-input";
 import { loginSchema, signupSchema } from "@/lib/validations/auth";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
@@ -187,17 +188,17 @@ interface FieldProps {
 }
 
 function Field({ label, name, type, placeholder, autoComplete, error }: FieldProps) {
+  const shared = {
+    id: name,
+    name,
+    placeholder,
+    autoComplete,
+    "aria-invalid": Boolean(error),
+  };
   return (
     <div className="space-y-1.5">
       <Label htmlFor={name}>{label}</Label>
-      <Input
-        id={name}
-        name={name}
-        type={type}
-        placeholder={placeholder}
-        autoComplete={autoComplete}
-        aria-invalid={Boolean(error)}
-      />
+      {type === "password" ? <PasswordInput {...shared} /> : <Input type={type} {...shared} />}
       {error && <p className="text-destructive text-xs">{error}</p>}
     </div>
   );

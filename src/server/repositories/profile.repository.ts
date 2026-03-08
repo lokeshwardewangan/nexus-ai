@@ -9,6 +9,7 @@ export interface ProfileRow {
   username: string | null;
   bio: string | null;
   headline: string | null;
+  avatar_url: string | null;
   tokens_used: number;
 }
 
@@ -23,7 +24,7 @@ export async function selectProfile(userId: string): Promise<ProfileRow | null> 
   const supabase = await createClient();
   const { data } = await supabase
     .from("profiles")
-    .select("id, email, full_name, username, bio, headline, tokens_used")
+    .select("id, email, full_name, username, bio, headline, avatar_url, tokens_used")
     .eq("id", userId)
     .maybeSingle();
   return (data as ProfileRow | null) ?? null;
@@ -32,6 +33,18 @@ export async function selectProfile(userId: string): Promise<ProfileRow | null> 
 export async function updateProfileRow(userId: string, patch: ProfilePatch): Promise<void> {
   const supabase = await createClient();
   const { error } = await supabase.from("profiles").update(patch).eq("id", userId);
+  if (error) {
+    if (error.code === "23505") throw new Error("That username is already taken");
+    throw new Error(error.message);
+  }
+}
+
+export async function updateAvatarUrl(userId: string, avatarUrl: string | null): Promise<void> {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("profiles")
+    .update({ avatar_url: avatarUrl })
+    .eq("id", userId);
   if (error) throw error;
 }
 

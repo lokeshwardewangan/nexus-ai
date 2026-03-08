@@ -6,5 +6,6 @@ export interface Profile {
   username: string;
   headline: string;
   bio: string;
+  avatarUrl: string | null;
   tokensUsed: number;
 }

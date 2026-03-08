@@ -6,39 +6,40 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/ui/password-input";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { changePasswordSchema } from "@/lib/validations/auth";
 
 export function ResetPasswordForm() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+
+  const isValid = changePasswordSchema.safeParse({ password, confirm }).success;
+  const passwordError =
+    password.length > 0 && password.length < 8
+      ? "Password must be at least 8 characters"
+      : undefined;
+  const confirmError =
+    confirm.length > 0 && confirm !== password ? "Passwords don't match" : undefined;
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const data = Object.fromEntries(new FormData(event.currentTarget));
-    const password = String(data.password ?? "");
-    const confirm = String(data.confirm ?? "");
-
-    if (password.length < 8) {
-      toast.error("Password must be at least 8 characters");
-      return;
-    }
-    if (password !== confirm) {
-      toast.error("Passwords don't match");
-      return;
-    }
+    const parsed = changePasswordSchema.safeParse({ password, confirm });
+    if (!parsed.success) return;
     if (!isSupabaseConfigured) {
       router.push("/studio");
       return;
     }
 
     setLoading(true);
-    const { error } = await createClient().auth.updateUser({ password });
+    const { error } = await createClient().auth.updateUser({ password: parsed.data.password });
     if (error) {
-      toast.error(error.message);
       setLoading(false);
+      toast.error(error.message); // keep the entered values so the user can retry
       return;
     }
     toast.success("Password updated");
@@ -56,25 +57,31 @@ export function ResetPasswordForm() {
       <form onSubmit={onSubmit} className="mt-8 space-y-4" noValidate>
         <div className="space-y-1.5">
           <Label htmlFor="password">New password</Label>
-          <Input
+          <PasswordInput
             id="password"
             name="password"
-            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
             autoComplete="new-password"
+            aria-invalid={Boolean(passwordError)}
           />
+          {passwordError && <p className="text-destructive text-xs">{passwordError}</p>}
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="confirm">Confirm password</Label>
-          <Input
+          <PasswordInput
             id="confirm"
             name="confirm"
-            type="password"
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
             placeholder="••••••••"
             autoComplete="new-password"
+            aria-invalid={Boolean(confirmError)}
           />
+          {confirmError && <p className="text-destructive text-xs">{confirmError}</p>}
         </div>
-        <Button type="submit" className="w-full" disabled={loading}>
+        <Button type="submit" className="w-full" disabled={!isValid || loading}>
           {loading && <Loader2 className="size-4 animate-spin" />}
           Update password
         </Button>
