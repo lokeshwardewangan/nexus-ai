@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FileText, LayoutGrid, MessageSquare, Plus } from "lucide-react";
+import { FileText, LayoutGrid, MessageSquare, Plus, Zap } from "lucide-react";
 
 import { assistants, getAssistant } from "@/config/assistants";
 import { Logo } from "@/components/layout/logo";
@@ -10,6 +10,8 @@ import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Hint } from "@/components/ui/hint";
 import { cn } from "@/lib/utils";
+import { formatTokens } from "@/lib/format";
+import { useUsage } from "../usage-context";
 import type { StudioUser } from "@/types/user";
 import type { ConversationSummary } from "@/types/conversation";
 import { UserMenu } from "./user-menu";
@@ -29,6 +31,7 @@ export function StudioNav({
   conversations: ConversationSummary[];
 }) {
   const pathname = usePathname();
+  const { tokensUsed } = useUsage();
 
   const itemClass = (active: boolean) =>
     cn(
@@ -123,11 +126,31 @@ export function StudioNav({
         </div>
       </div>
 
-      <div className="border-border flex items-center gap-1.5 border-t p-2">
-        <div className="min-w-0 flex-1">
-          <UserMenu user={user} />
+      <div className="border-border space-y-1 border-t p-2">
+        <div className="flex items-center gap-1.5">
+          <div className="min-w-0 flex-1">
+            <UserMenu user={user} />
+          </div>
+          <ThemeToggle />
         </div>
-        <ThemeToggle />
+
+        <Hint
+          side="top"
+          align="center"
+          content="Total tokens used across your conversations and documents"
+        >
+          <div className="bg-secondary/50 hover:bg-secondary/70 flex items-center gap-2.5 rounded-lg px-2.5 py-2 transition-colors">
+            <span className="bg-primary/10 text-primary flex size-7 shrink-0 items-center justify-center rounded-md">
+              <Zap className="size-3.5" />
+            </span>
+            <div className="flex min-w-0 flex-1 items-baseline justify-between gap-2 leading-none">
+              <span className="text-muted-foreground text-xs">Tokens used</span>
+              <span className="text-foreground text-sm font-semibold tabular-nums">
+                {formatTokens(tokensUsed)}
+              </span>
+            </div>
+          </div>
+        </Hint>
       </div>
     </div>
   );

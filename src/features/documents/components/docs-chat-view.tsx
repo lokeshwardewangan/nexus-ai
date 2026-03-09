@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
@@ -9,8 +9,10 @@ import { ArrowDown, ArrowUp, Check, FileText, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { estimateTokens } from "@/lib/ai/usage";
 import { Markdown } from "@/features/chat/components/markdown";
 import { useAutoScroll } from "@/features/chat/use-auto-scroll";
+import { useUsage } from "@/features/studio/usage-context";
 import type { DocumentSummary } from "@/types/document";
 
 const STARTERS = [
@@ -25,12 +27,26 @@ function messageText(message: UIMessage): string {
 
 export function DocsChatView({ documents }: { documents: DocumentSummary[] }) {
   const [transport] = useState(() => new DefaultChatTransport({ api: "/api/documents/chat" }));
-  const { messages, sendMessage, status, error } = useChat({ transport });
+  const { setLiveEstimate, refresh } = useUsage();
+  const { messages, sendMessage, status, error } = useChat({
+    transport,
+    onFinish: () => refresh(),
+  });
   const [input, setInput] = useState("");
   const [excluded, setExcluded] = useState<Set<string>>(new Set());
   const { containerRef, handleScroll, scrollToBottom, showJumpButton } = useAutoScroll(messages);
 
   const isStreaming = status === "streaming" || status === "submitted";
+
+  // Live token estimate for the sidebar counter while the answer streams.
+  useEffect(() => {
+    if (status === "streaming") {
+      const last = messages.at(-1);
+      if (last?.role === "assistant") setLiveEstimate(estimateTokens(messageText(last)));
+    } else if (status === "ready" || status === "error") {
+      setLiveEstimate(0);
+    }
+  }, [messages, status, setLiveEstimate]);
   const includedIds = documents.filter((doc) => !excluded.has(doc.id)).map((doc) => doc.id);
   const allIncluded = excluded.size === 0;
   const hasDocuments = documents.length > 0;
@@ -89,7 +105,7 @@ export function DocsChatView({ documents }: { documents: DocumentSummary[] }) {
                   aria-pressed={included}
                   title={doc.name}
                   className={cn(
-                    "inline-flex max-w-[220px] items-center gap-2 rounded-lg border px-2.5 py-1.5 text-xs transition-colors",
+                    "inline-flex max-w-55 cursor-pointer items-center gap-2 rounded-lg border px-2.5 py-1.5 text-xs transition-colors",
                     included
                       ? "border-primary/50 bg-primary/10 text-foreground"
                       : "border-border text-muted-foreground opacity-70 hover:opacity-100",
@@ -145,7 +161,7 @@ export function DocsChatView({ documents }: { documents: DocumentSummary[] }) {
             type="button"
             onClick={scrollToBottom}
             aria-label="Scroll to latest"
-            className="border-border bg-card text-foreground hover:bg-accent absolute bottom-4 left-1/2 flex size-9 -translate-x-1/2 items-center justify-center rounded-full border shadow-md transition-colors"
+            className="border-border bg-card text-foreground hover:bg-accent absolute bottom-4 left-1/2 flex size-9 -translate-x-1/2 cursor-pointer items-center justify-center rounded-full border shadow-md transition-colors"
           >
             <ArrowDown className="size-4" />
           </button>
@@ -236,7 +252,7 @@ function EmptyState({ onPick }: { onPick: (text: string) => void }) {
           <button
             key={starter}
             onClick={() => onPick(starter)}
-            className="border-border hover:border-primary/40 hover:bg-card rounded-xl border px-4 py-3 text-left text-sm transition-colors"
+            className="border-border hover:border-primary/40 hover:bg-card cursor-pointer rounded-xl border px-4 py-3 text-left text-sm transition-colors"
           >
             {starter}
           </button>

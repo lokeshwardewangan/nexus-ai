@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { type UIMessage } from "ai";
 import { ArrowDown, ArrowUp, Check, Copy } from "lucide-react";
@@ -10,6 +10,8 @@ import { getAssistant, type Assistant } from "@/config/assistants";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { estimateTokens } from "@/lib/ai/usage";
+import { useUsage } from "@/features/studio/usage-context";
 import { createConversationAction } from "../actions";
 import { useAutoScroll } from "../use-auto-scroll";
 import { Markdown } from "./markdown";
@@ -35,16 +37,28 @@ export function ChatView({
 }) {
   const assistant = getAssistant(assistantId);
   const conversationIdRef = useRef(initialConversationId);
+  const { setLiveEstimate, refresh } = useUsage();
   // Only pass `id`/`messages` when resuming a saved conversation. Passing an
   // `id` key of `undefined` makes useChat recreate its Chat every render
   // (it checks `"id" in options`), which wipes streamed messages.
-  const { messages, sendMessage, status, error } = useChat(
-    initialConversationId ? { id: initialConversationId, messages: initialMessages } : {},
-  );
+  const { messages, sendMessage, status, error } = useChat({
+    ...(initialConversationId ? { id: initialConversationId, messages: initialMessages } : {}),
+    onFinish: () => refresh(),
+  });
   const [input, setInput] = useState("");
   const { containerRef, handleScroll, scrollToBottom, showJumpButton } = useAutoScroll(messages);
 
   const isStreaming = status === "streaming" || status === "submitted";
+
+  // Feed a live token estimate to the sidebar counter while the reply streams.
+  useEffect(() => {
+    if (status === "streaming") {
+      const last = messages.at(-1);
+      if (last?.role === "assistant") setLiveEstimate(estimateTokens(messageText(last)));
+    } else if (status === "ready" || status === "error") {
+      setLiveEstimate(0);
+    }
+  }, [messages, status, setLiveEstimate]);
 
   if (!assistant) return null;
   const Icon = assistant.icon;
@@ -115,7 +129,7 @@ export function ChatView({
             type="button"
             onClick={scrollToBottom}
             aria-label="Scroll to latest"
-            className="border-border bg-card text-foreground hover:bg-accent absolute bottom-4 left-1/2 flex size-9 -translate-x-1/2 items-center justify-center rounded-full border shadow-md transition-colors"
+            className="border-border bg-card text-foreground hover:bg-accent absolute bottom-4 left-1/2 flex size-9 -translate-x-1/2 cursor-pointer items-center justify-center rounded-full border shadow-md transition-colors"
           >
             <ArrowDown className="size-4" />
           </button>
@@ -184,7 +198,7 @@ function EmptyState({
           <button
             key={starter}
             onClick={() => onPick(starter)}
-            className="border-border hover:border-primary/40 hover:bg-card rounded-xl border px-4 py-3 text-left text-sm transition-colors"
+            className="border-border hover:border-primary/40 hover:bg-card cursor-pointer rounded-xl border px-4 py-3 text-left text-sm transition-colors"
           >
             {starter}
           </button>
@@ -236,7 +250,7 @@ function CopyButton({ text }: { text: string }) {
   return (
     <button
       onClick={copy}
-      className="text-muted-foreground hover:text-foreground mt-2 inline-flex items-center gap-1.5 text-xs opacity-0 transition group-hover:opacity-100"
+      className="text-muted-foreground hover:text-foreground mt-2 inline-flex cursor-pointer items-center gap-1.5 text-xs opacity-0 transition group-hover:opacity-100"
     >
       {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
       {copied ? "Copied" : "Copy"}
