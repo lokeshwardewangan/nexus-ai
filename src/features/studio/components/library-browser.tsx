@@ -82,7 +82,7 @@ function FilterPill({
     <button
       onClick={onClick}
       className={cn(
-        "rounded-full border px-3.5 py-1.5 text-sm transition-colors",
+        "cursor-pointer rounded-full border px-3.5 py-1.5 text-sm transition-colors",
         active
           ? "border-primary bg-primary text-primary-foreground"
           : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/30",
