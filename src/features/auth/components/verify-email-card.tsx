@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
-const RESEND_COOLDOWN = 30;
+const RESEND_COOLDOWN = 5;
 
 export function VerifyEmailCard({ email }: { email: string }) {
   const [cooldown, setCooldown] = useState(0);

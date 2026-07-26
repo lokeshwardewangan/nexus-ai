@@ -17,9 +17,15 @@ export async function updateSession(request: NextRequest) {
 
   if (!isSupabaseConfigured) return response;
 
-  // Safety net: if an auth code lands on any route (e.g. an email link pointed
+  // Safety net: if an auth code, token_hash, or auth error lands on any route (e.g. an email link pointed
   // at the Site URL root), forward it to the callback handler to be exchanged.
-  if (request.nextUrl.searchParams.has("code") && request.nextUrl.pathname !== "/auth/callback") {
+  const hasCode = request.nextUrl.searchParams.has("code");
+  const hasTokenHash = request.nextUrl.searchParams.has("token_hash");
+  const hasAuthError =
+    request.nextUrl.searchParams.has("error") ||
+    request.nextUrl.searchParams.has("error_description");
+
+  if ((hasCode || hasTokenHash || hasAuthError) && request.nextUrl.pathname !== "/auth/callback") {
     const callbackUrl = request.nextUrl.clone();
     callbackUrl.pathname = "/auth/callback";
     return NextResponse.redirect(callbackUrl);

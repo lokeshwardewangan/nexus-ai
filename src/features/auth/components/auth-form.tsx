@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { AlertCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -41,6 +41,8 @@ const copy: Record<
 
 export function AuthForm({ mode }: { mode: Mode }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const errorParam = searchParams.get("error");
   const text = copy[mode];
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
@@ -114,6 +116,17 @@ export function AuthForm({ mode }: { mode: Mode }) {
         <h1 className="text-2xl font-semibold tracking-tight">{text.title}</h1>
         <p className="text-muted-foreground mt-1.5 text-sm">{text.subtitle}</p>
       </div>
+
+      {errorParam && (
+        <div className="border-destructive/20 bg-destructive/10 text-destructive mb-6 flex items-start gap-2.5 rounded-lg border p-3 text-xs leading-relaxed">
+          <AlertCircle className="mt-0.5 size-4 shrink-0" />
+          <span>
+            {errorParam === "auth"
+              ? "Authentication failed or session expired. Please try again."
+              : errorParam}
+          </span>
+        </div>
+      )}
 
       <OAuthButtons />
 
